@@ -1,0 +1,25 @@
+{
+  "name": "vibe-bff",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend-for-frontend for Vibe. Owns all LLM/TMDB secrets, prompt templates, schema validation, and multi-vendor failover.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test"
+  },
+  "dependencies": {
+    "zod": "^3.23.8",
+    "@aws-sdk/client-secrets-manager": "^3.632.0",
+    "@aws-sdk/client-dynamodb": "^3.632.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.14.15",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5",
+    "eslint": "^9.9.0"
+  }
+}
