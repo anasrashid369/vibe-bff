@@ -1,4 +1,5 @@
 import type { CandidateMovie } from "../providers/failover.js";
+import { getProviderSecrets } from "./secrets.js";
 
 export interface TmdbFilters {
   genre?: string;
@@ -43,12 +44,9 @@ interface TmdbDiscoverResponse {
   results: TmdbMovieResult[];
 }
 
-function getReadAccessToken(): string {
-  const token = process.env.TMDB_READ_ACCESS_TOKEN;
-  if (!token) {
-    throw new Error("TMDB_READ_ACCESS_TOKEN is not set");
-  }
-  return token;
+async function getReadAccessToken(): Promise<string> {
+  const secrets = await getProviderSecrets();
+  return secrets.tmdbApiKey;
 }
 
 /**
@@ -81,7 +79,7 @@ export async function fetchCandidates(
 
   const response = await fetch(`${TMDB_BASE_URL}/discover/movie?${params.toString()}`, {
     headers: {
-      Authorization: `Bearer ${getReadAccessToken()}`,
+      Authorization: `Bearer ${await getReadAccessToken()}`,
       Accept: "application/json",
     },
   });

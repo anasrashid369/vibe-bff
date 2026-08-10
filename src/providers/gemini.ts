@@ -1,6 +1,7 @@
 import type { LlmProvider, CandidateMovie } from "./failover.js";
 import type { RecommendationRequest } from "../schemas/recommendation.schema.js";
 import { buildRecommendationPrompt } from "../prompts/recommendations.prompt.js";
+import { getProviderSecrets } from "../services/secrets.js";
 
 const GEMINI_MODEL = "gemini-flash-latest";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
@@ -13,12 +14,9 @@ interface GeminiResponse {
   }>;
 }
 
-function getApiKey(): string {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) {
-    throw new Error("GEMINI_API_KEY is not set");
-  }
-  return key;
+async function getApiKey(): Promise<string> {
+  const secrets = await getProviderSecrets();
+  return secrets.geminiApiKey;
 }
 
 /** Strips accidental ```json fences models sometimes add despite instructions. */
@@ -32,7 +30,7 @@ export const geminiProvider: LlmProvider = {
   async call(request: RecommendationRequest, candidates: CandidateMovie[]): Promise<unknown> {
     const prompt = buildRecommendationPrompt(request, candidates);
 
-    const response = await fetch(`${GEMINI_URL}?key=${getApiKey()}`, {
+    const response = await fetch(`${GEMINI_URL}?key=${await getApiKey()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
