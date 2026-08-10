@@ -11,15 +11,17 @@
     "lint": "eslint src test"
   },
   "dependencies": {
-    "zod": "^3.23.8",
+    "@aws-sdk/client-dynamodb": "^3.632.0",
     "@aws-sdk/client-secrets-manager": "^3.632.0",
-    "@aws-sdk/client-dynamodb": "^3.632.0"
+    "dotenv": "^17.4.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^20.14.15",
+    "eslint": "^9.9.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.5.4",
-    "vitest": "^2.0.5",
-    "eslint": "^9.9.0"
+    "vitest": "^2.0.5"
   }
 }
