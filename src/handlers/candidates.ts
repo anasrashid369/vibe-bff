@@ -1,8 +1,8 @@
-import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import type { APIGatewayProxyHandler } from "aws-lambda";
 import { fetchCandidates } from "../services/tmdb.js";
 
 /** Thin TMDB proxy — discover/similar, with query params for filters. */
-export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+export const handler: APIGatewayProxyHandler = async (event) => {
   const qs = event.queryStringParameters ?? {};
 
   try {

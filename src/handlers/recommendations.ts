@@ -1,11 +1,11 @@
-import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import type { APIGatewayProxyHandler } from "aws-lambda";
 import { RecommendationRequestSchema } from "../schemas/recommendation.schema.js";
 import { getRecommendationsWithFailover } from "../providers/failover.js";
 import { geminiProvider } from "../providers/gemini.js";
 import { fetchCandidates } from "../services/tmdb.js";
 import { log, telemetry } from "../lib/logger.js";
 
-export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+export const handler: APIGatewayProxyHandler = async (event) => {
   const start = Date.now();
 
   const parseResult = RecommendationRequestSchema.safeParse(
