@@ -38,6 +38,7 @@ interface TmdbMovieResult {
   id: number;
   title: string;
   overview: string;
+  poster_path: string | null;
 }
 
 interface TmdbDiscoverResponse {
@@ -94,8 +95,9 @@ export async function fetchCandidates(
   return data.results
     .filter((movie) => !excludeSet.has(movie.id))
     .map((movie) => ({
-      id: movie.id,
-      title: movie.title,
-      overview: movie.overview,
-    }));
+  id: movie.id,
+  title: movie.title,
+  overview: movie.overview,
+  posterPath: movie.poster_path,
+}));
 }

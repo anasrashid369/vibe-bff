@@ -5,6 +5,7 @@ export interface CandidateMovie {
   id: number;
   title: string;
   overview: string;
+  posterPath: string | null;
 }
 
 export interface LlmProvider {
@@ -62,6 +63,7 @@ function tmdbOnlyRanking(candidates: CandidateMovie[]): RecommendationResponse {
       title: c.title,
       reason: "Popular pick based on your recent activity.",
       confidence: "low" as const,
+      poster_path: c.posterPath,
     })),
     fallback_triggered: true,
     generated_at: new Date().toISOString(),

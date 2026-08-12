@@ -34,6 +34,19 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       telemetry,
     });
 
+    // Gemini only returns movie_id/title/reason/confidence — it never
+    // gets to invent a poster URL. We attach the real poster path here
+    // by matching back against the original grounded TMDB candidates,
+    // same principle as the movie_id grounding itself.
+    const posterByMovieId = new Map(candidates.map((c) => [c.id, c.posterPath]));
+    const enrichedResponse = {
+      ...response,
+      recommendations: response.recommendations.map((rec) => ({
+        ...rec,
+        poster_path: posterByMovieId.get(rec.movie_id) ?? null,
+      })),
+    };
+
     log({
       event: "recommendations.completed",
       provider: response.provider_used,
@@ -41,7 +54,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       latency_ms: Date.now() - start,
     });
 
-    return { statusCode: 200, body: JSON.stringify(response) };
+    return { statusCode: 200, body: JSON.stringify(enrichedResponse) };
   } catch (err) {
     log({ event: "recommendations.error", error: String(err), latency_ms: Date.now() - start });
     return { statusCode: 502, body: JSON.stringify({ error: "Upstream failure" }) };

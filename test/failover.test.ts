@@ -3,7 +3,7 @@ import { getRecommendationsWithFailover } from "../src/providers/failover.js";
 import type { LlmProvider, CandidateMovie } from "../src/providers/failover.js";
 
 const candidates: CandidateMovie[] = [
-  { id: 1, title: "Parasite", overview: "A tense social thriller." },
+  { id: 1, title: "Parasite", overview: "A tense social thriller.", posterPath: null },
 ];
 
 const validResponse = {

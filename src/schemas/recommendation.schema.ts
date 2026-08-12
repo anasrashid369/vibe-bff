@@ -10,6 +10,7 @@ export const RecommendationItemSchema = z.object({
   title: z.string().min(1),
   reason: z.string().min(1),
   confidence: z.enum(["high", "medium", "low"]),
+  poster_path: z.string().nullable().optional(),
 });
 
 export const RecommendationResponseSchema = z.object({

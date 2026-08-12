@@ -11,7 +11,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       actor: qs.actor,
       releaseDateGte: qs.release_date_gte,
     });
-    return { statusCode: 200, body: JSON.stringify({ candidates }) };
+
+    const body = candidates.map((c) => ({
+      id: c.id,
+      title: c.title,
+      overview: c.overview,
+      poster_path: c.posterPath,
+    }));
+
+    return { statusCode: 200, body: JSON.stringify({ candidates: body }) };
   } catch (err) {
     return { statusCode: 502, body: JSON.stringify({ error: String(err) }) };
   }
