@@ -6,6 +6,7 @@ export interface CandidateMovie {
   title: string;
   overview: string;
   posterPath: string | null;
+  genres: string[];
 }
 
 export interface LlmProvider {

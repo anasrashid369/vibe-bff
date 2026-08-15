@@ -17,6 +17,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       title: c.title,
       overview: c.overview,
       poster_path: c.posterPath,
+      genres: c.genres,
     }));
 
     return { statusCode: 200, body: JSON.stringify({ candidates: body }) };

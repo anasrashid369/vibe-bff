@@ -35,16 +35,20 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     });
 
     // Gemini only returns movie_id/title/reason/confidence — it never
-    // gets to invent a poster URL. We attach the real poster path here
-    // by matching back against the original grounded TMDB candidates,
-    // same principle as the movie_id grounding itself.
-    const posterByMovieId = new Map(candidates.map((c) => [c.id, c.posterPath]));
+    // gets to invent a poster URL or genre list. We attach both here by
+    // matching back against the original grounded TMDB candidates, same
+    // principle as the movie_id grounding itself.
+    const candidateById = new Map(candidates.map((c) => [c.id, c]));
     const enrichedResponse = {
       ...response,
-      recommendations: response.recommendations.map((rec) => ({
-        ...rec,
-        poster_path: posterByMovieId.get(rec.movie_id) ?? null,
-      })),
+      recommendations: response.recommendations.map((rec) => {
+        const candidate = candidateById.get(rec.movie_id);
+        return {
+          ...rec,
+          poster_path: candidate?.posterPath ?? null,
+          genres: candidate?.genres ?? [],
+        };
+      }),
     };
 
     log({
