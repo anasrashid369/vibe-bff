@@ -3,17 +3,13 @@ import { handler as recommendationsHandler } from "./recommendations.js";
 import { handler as candidatesHandler } from "./candidates.js";
 import { handler as healthHandler } from "./health.js";
 import { handler as vibeSearchHandler } from "./vibeSearch.js";
+import { handler as embedHandler } from "./embed.js";
+import { handler as metricsHandler } from "./metrics.js";
 
 /**
  * Single Lambda sits behind API Gateway's {proxy+} catch-all (see
- * vibe-infra/modules/api_gateway) — every path/method lands here, so
+ * vibe-infra/modules/api_gateway) -- every path/method lands here, so
  * this router dispatches to the right handler based on path + method.
- *
- * We deliberately don't forward Lambda's `callback` param to the
- * sub-handlers — none of them use the callback style, they're all plain
- * async functions that return a result. Passing callback through made
- * TypeScript treat the return type as possibly `void`, which doesn't
- * match what we actually guarantee here.
  */
 async function invoke(
   fn: APIGatewayProxyHandler,
@@ -24,7 +20,7 @@ async function invoke(
     /* unused legacy callback param */
   });
   if (!result) {
-    throw new Error("Handler returned void — all handlers must return a result");
+    throw new Error("Handler returned void -- all handlers must return a result");
   }
   return result;
 }
@@ -44,6 +40,12 @@ export const handler: APIGatewayProxyHandler = async (event, context) => {
   }
   if (path === "/v1/search/vibe" && method === "POST") {
     return invoke(vibeSearchHandler, event, context);
+  }
+  if (path === "/v1/embed" && method === "POST") {
+    return invoke(embedHandler, event, context);
+  }
+  if (path === "/v1/metrics" && method === "GET") {
+    return invoke(metricsHandler, event, context);
   }
 
   return { statusCode: 404, body: JSON.stringify({ error: "Not found", path, method }) };

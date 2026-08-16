@@ -4,6 +4,7 @@ export interface ProviderSecrets {
   tmdbApiKey: string;
   geminiApiKey: string;
   claudeApiKey: string;
+  groqApiKey: string;
 }
 
 let cached: ProviderSecrets | undefined;

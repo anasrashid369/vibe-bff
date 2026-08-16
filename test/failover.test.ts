@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { getRecommendationsWithFailover } from "../src/providers/failover.js";
 import type { LlmProvider, CandidateMovie } from "../src/providers/failover.js";
+import { claudeProvider } from "../src/providers/claude.js";
 
 const candidates: CandidateMovie[] = [
   { id: 1, title: "Parasite", overview: "A tense social thriller.", posterPath: null, genres: ["Drama", "Thriller"] },
@@ -73,5 +74,12 @@ describe("getRecommendationsWithFailover", () => {
     });
     expect(result.source).toBe("ai");
     expect(result.provider_used).toBe("fallback");
+  });
+});
+
+describe("claudeProvider wiring", () => {
+  it("is exported with the expected shape", () => {
+    expect(claudeProvider.name).toBe("claude-3-5-haiku-latest");
+    expect(typeof claudeProvider.call).toBe("function");
   });
 });

@@ -1,13 +1,9 @@
 import type { APIGatewayProxyHandler } from "aws-lambda";
-import { VibeSearchRequestSchema } from "../schemas/embed.schema.js";
+import { EmbedRequestSchema } from "../schemas/embed.schema.js";
 import { embedTexts, EMBEDDING_MODEL_VERSION } from "../services/embeddings.js";
 
-/**
- * Body: { query_text } -> embedding generated server-side, returned to
- * the client for local vector search (spec §5.2).
- */
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const parseResult = VibeSearchRequestSchema.safeParse(JSON.parse(event.body ?? "{}"));
+  const parseResult = EmbedRequestSchema.safeParse(JSON.parse(event.body ?? "{}"));
 
   if (!parseResult.success) {
     return {
@@ -17,8 +13,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   try {
-    const [embedding] = await embedTexts([parseResult.data.query_text]);
-    return { statusCode: 200, body: JSON.stringify({ embedding, model_version: EMBEDDING_MODEL_VERSION }) };
+    const embeddings = await embedTexts(parseResult.data.texts);
+    return { statusCode: 200, body: JSON.stringify({ embeddings, model_version: EMBEDDING_MODEL_VERSION }) };
   } catch (err) {
     return { statusCode: 502, body: JSON.stringify({ error: String(err) }) };
   }

@@ -2,8 +2,10 @@ import type { APIGatewayProxyHandler } from "aws-lambda";
 import { RecommendationRequestSchema } from "../schemas/recommendation.schema.js";
 import { getRecommendationsWithFailover } from "../providers/failover.js";
 import { geminiProvider } from "../providers/gemini.js";
+import { groqProvider } from "../providers/groq.js";
 import { fetchCandidates } from "../services/tmdb.js";
 import { log, telemetry } from "../lib/logger.js";
+import { recordRequestMetrics } from "../services/metrics.js";
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const start = Date.now();
@@ -30,14 +32,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       request,
       candidates,
       primary: geminiProvider,
-      // fallback: claudeProvider,  // Phase 2
+      fallback: groqProvider,
       telemetry,
     });
 
-    // Gemini only returns movie_id/title/reason/confidence — it never
-    // gets to invent a poster URL or genre list. We attach both here by
-    // matching back against the original grounded TMDB candidates, same
-    // principle as the movie_id grounding itself.
     const candidateById = new Map(candidates.map((c) => [c.id, c]));
     const enrichedResponse = {
       ...response,
@@ -51,12 +49,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }),
     };
 
+    const latencyMs = Date.now() - start;
+
     log({
       event: "recommendations.completed",
       provider: response.provider_used,
       fallback_triggered: response.fallback_triggered,
-      latency_ms: Date.now() - start,
+      latency_ms: latencyMs,
     });
+
+    await recordRequestMetrics({ fallbackTriggered: response.fallback_triggered, latencyMs });
 
     return { statusCode: 200, body: JSON.stringify(enrichedResponse) };
   } catch (err) {

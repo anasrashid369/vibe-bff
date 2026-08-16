@@ -3,17 +3,16 @@ import type { RecommendationRequest } from "../schemas/recommendation.schema.js"
 import { buildRecommendationPrompt } from "../prompts/recommendations.prompt.js";
 import { getProviderSecrets } from "../services/secrets.js";
 
-const CLAUDE_MODEL = "claude-3-5-haiku-latest";
-const CLAUDE_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION = "2023-06-01";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-interface ClaudeResponse {
-  content?: Array<{ type: string; text?: string }>;
+interface GroqResponse {
+  choices?: Array<{ message?: { content?: string } }>;
 }
 
 async function getApiKey(): Promise<string> {
   const secrets = await getProviderSecrets();
-  return secrets.claudeApiKey;
+  return secrets.groqApiKey;
 }
 
 /** Strips accidental ```json fences models sometimes add despite instructions. */
@@ -22,55 +21,48 @@ function stripCodeFences(text: string): string {
 }
 
 /**
- * Phase 2 fallback provider. Tried only if Gemini fails (see
- * failover.ts) -- gives the system a second AI-quality attempt before
- * dropping to the non-AI TMDB-only ranking.
+ * Phase 2 fallback provider -- free tier, OpenAI-compatible API. Tried
+ * only if Gemini fails (see failover.ts).
  */
-export const claudeProvider: LlmProvider = {
-  name: CLAUDE_MODEL,
+export const groqProvider: LlmProvider = {
+  name: GROQ_MODEL,
   async call(request: RecommendationRequest, candidates: CandidateMovie[]): Promise<unknown> {
     const prompt = buildRecommendationPrompt(request, candidates);
     const apiKey = await getApiKey();
 
-    const response = await fetch(CLAUDE_URL, {
+    const response = await fetch(GROQ_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": ANTHROPIC_VERSION,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: CLAUDE_MODEL,
-        max_tokens: 1024,
+        model: GROQ_MODEL,
         messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
       }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Claude request failed: ${response.status} ${response.statusText} -- ${errorBody}`);
+      throw new Error(`Groq request failed: ${response.status} ${response.statusText} -- ${errorBody}`);
     }
 
-    const data = (await response.json()) as ClaudeResponse;
-    const textBlock = data.content?.find((block) => block.type === "text");
-    const rawText = textBlock?.text;
+    const data = (await response.json()) as GroqResponse;
+    const rawText = data.choices?.[0]?.message?.content;
 
     if (!rawText) {
-      throw new Error("Claude response had no text content");
+      throw new Error("Groq response had no text content");
     }
 
     const modelOutput = JSON.parse(stripCodeFences(rawText)) as { recommendations?: unknown };
 
-    // Same pattern as gemini.ts: the model is only responsible for
-    // `recommendations` -- metadata fields are ours to set, not the
-    // LLM's to invent.
     return {
       source: "ai",
-      provider_used: CLAUDE_MODEL,
+      provider_used: GROQ_MODEL,
       recommendations: modelOutput.recommendations,
       fallback_triggered: false,
       generated_at: new Date().toISOString(),
     };
   },
 };
-
