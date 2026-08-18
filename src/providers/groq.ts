@@ -3,7 +3,7 @@ import type { RecommendationRequest } from "../schemas/recommendation.schema.js"
 import { buildRecommendationPrompt } from "../prompts/recommendations.prompt.js";
 import { getProviderSecrets } from "../services/secrets.js";
 
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GROQ_MODEL = "openai/gpt-oss-120b";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 interface GroqResponse {
